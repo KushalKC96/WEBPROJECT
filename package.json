@@ -9,21 +9,21 @@
     "dev": "nodemon server.js"
   },
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "bcryptjs": "^2.4.3",
+    "clear-npx-cache": "^1.1.2",
     "cookie-parser": "^1.4.7",
-    "cors": "^2.8.5",
-<<<<<<< HEAD
-    "dotenv": "^11.6.2",
-=======
-    "dotenv": "^16.4.5",
->>>>>>> e0abae4 (Initial backend commit)
-    "express": "^4.18.2",
+    "cors": "^2.8.6",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.1",
     "jsonwebtoken": "^9.0.3",
     "mysql2": "^3.6.5",
     "sequelize": "^6.35.0"
   },
   "devDependencies": {
-    "nodemon": "^3.0.2"
+    "@prisma/client": "^7.4.0",
+    "nodemon": "^3.0.2",
+    "prisma": "^7.4.0"
   },
   "author": "Your Name",
   "license": "ISC"
