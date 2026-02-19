@@ -4,7 +4,7 @@ import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import authRoutes from './src/routes/authRoutes.js';
 
-
+console.log("blablabla");
 // Load environment variables
 dotenv.config();
 console.log('DB_PASSWORD:', process.env.DB_PASSWORD);
