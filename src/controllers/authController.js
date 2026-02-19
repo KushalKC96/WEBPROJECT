@@ -1,7 +1,9 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import db from '../config/database.js';
+// import db from '../config/database.js';
+import prisma from '../config/prisma.js';
+
 
 // Environment variables you'll need to set
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this';
@@ -22,12 +24,12 @@ export const register = async (req, res) => {
     }
 
     // Check if user already exists
-    const [existingUser] = await db.query(
-      'SELECT id FROM users WHERE email = ?',
-      [email]
-    );
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
+    });
 
-    if (existingUser.length > 0) {
+    if (existingUser) {
+      console.log('Email already exists:', email);
       return res.status(400).json({
         success: false,
         message: 'Email already registered'
@@ -39,10 +41,17 @@ export const register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // Insert user into database
-    const [result] = await db.query(
-      'INSERT INTO users (name, email, password, phone, created_at) VALUES (?, ?, ?, ?, NOW())',
-      [name, email, hashedPassword, phone || null]
-    );
+    console.log('Creating user in database...');
+    const user = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        phone: phone || null
+      }
+    });
+
+    console.log('User created:', user.id, user.email);
 
     // Create JWT token
     const token = jwt.sign(
@@ -86,19 +95,17 @@ export const login = async (req, res) => {
     }
 
     // Check if user exists
-    const [users] = await db.query(
-      'SELECT id, name, email, password, phone FROM users WHERE email = ?',
-      [email]
-    );
+    const user = await prisma.user.findUnique({
+      where: { email }
+    });
 
-    if (users.length === 0) {
+    if (!user) {
+      console.log('User not found:', email);
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials'
       });
     }
-
-    const user = users[0];
 
     // Check password
     const isPasswordValid = await bcrypt.compare(password, user.password);
@@ -121,10 +128,21 @@ export const login = async (req, res) => {
     const sessionToken = crypto.randomBytes(32).toString('hex');
     const sessionExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-    await db.query(
-      'INSERT INTO sessions (user_id, session_token, expires_at, created_at) VALUES (?, ?, ?, NOW()) ON DUPLICATE KEY UPDATE session_token = ?, expires_at = ?',
-      [user.id, sessionToken, sessionExpiry, sessionToken, sessionExpiry]
-    );
+    // Delete old sessions for this user first
+    await prisma.session.deleteMany({
+      where: { userId: user.id }
+    });
+
+    // Create new session
+    await prisma.session.create({
+      data: {
+        userId: user.id,
+        sessionToken,
+        expiresAt: sessionExpiry
+      }
+    });
+
+    console.log('Session created');
 
     // Set session cookie
     res.cookie('session_token', sessionToken, {
@@ -161,8 +179,10 @@ export const logout = async (req, res) => {
     const userId = req.user.id; // From auth middleware
 
     // Delete session from database
-    await db.query('DELETE FROM sessions WHERE user_id = ?', [userId]);
-
+    await prisma.session.deleteMany({
+      where: { userId }
+    });
+    
     // Clear session cookie
     res.clearCookie('session_token');
 
@@ -185,12 +205,19 @@ export const getProfile = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    const [users] = await db.query(
-      'SELECT id, name, email, phone, created_at FROM users WHERE id = ?',
-      [userId]
-    );
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        role: true,
+        createdAt: true
+      }
+    });
 
-    if (users.length === 0) {
+    if (!user) {
       return res.status(404).json({
         success: false,
         message: 'User not found'
@@ -199,7 +226,7 @@ export const getProfile = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      user: users[0]
+      user
     });
 
   } catch (error) {
@@ -210,6 +237,9 @@ export const getProfile = async (req, res) => {
     });
   }
 };
+
+
+// ???????????????????????????????????
 
 // Request password reset
 export const forgotPassword = async (req, res) => {
@@ -224,43 +254,40 @@ export const forgotPassword = async (req, res) => {
     }
 
     // Check if user exists
-    const [users] = await db.query(
-      'SELECT id, name, email FROM users WHERE email = ?',
-      [email]
-    );
 
-    if (users.length === 0) {
-      // Don't reveal if user exists or not
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true, name: true, email: true }
+    });
+
+    if (!user) {
       return res.status(200).json({
         success: true,
         message: 'If email exists, password reset link has been sent'
       });
     }
 
-    const user = users[0];
 
     // Generate reset token
     const resetToken = crypto.randomBytes(32).toString('hex');
     const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
     const resetExpire = new Date(Date.now() + RESET_TOKEN_EXPIRE);
 
-    // Save reset token to database
-    await db.query(
-      'UPDATE users SET reset_token = ?, reset_token_expire = ? WHERE id = ?',
-      [hashedToken, resetExpire, user.id]
-    );
+    // Save reset token
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        reset_token: hashedToken,
+        reset_token_expire: resetExpire
+      }
+    });
 
-    // In production, send email with reset link
-    // const resetUrl = `${req.protocol}://${req.get('host')}/api/auth/reset-password/${resetToken}`;
-    // await sendEmail({ to: user.email, subject: 'Password Reset', resetUrl });
-
-    console.log('Password reset token:', resetToken); // Remove in production
+    console.log('Password reset token:', resetToken);
 
     res.status(200).json({
       success: true,
       message: 'Password reset email sent',
-      // Remove in production:
-      resetToken: resetToken // Only for testing
+      resetToken: resetToken
     });
 
   } catch (error) {
@@ -292,33 +319,40 @@ export const resetPassword = async (req, res) => {
       });
     }
 
+
     // Hash the token from URL
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
     // Find user with valid reset token
-    const [users] = await db.query(
-      'SELECT id FROM users WHERE reset_token = ? AND reset_token_expire > NOW()',
-      [hashedToken]
-    );
 
-    if (users.length === 0) {
+    const user = await prisma.user.findFirst({
+      where: {
+        reset_token: hashedToken,
+        reset_token_expire: {
+          gt: new Date()
+        }
+      },
+      select: { id: true }
+    });
+
+    if (!user) {
       return res.status(400).json({
         success: false,
         message: 'Invalid or expired reset token'
       });
     }
 
-    const user = users[0];
-
-    // Hash new password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Update password and clear reset token
-    await db.query(
-      'UPDATE users SET password = ?, reset_token = NULL, reset_token_expire = NULL WHERE id = ?',
-      [hashedPassword, user.id]
-    );
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        reset_token: null,
+        reset_token_expire: null
+      }
+    });
 
     res.status(200).json({
       success: true,
@@ -334,7 +368,6 @@ export const resetPassword = async (req, res) => {
   }
 };
 
-// Change password (when logged in)
 export const changePassword = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -347,21 +380,22 @@ export const changePassword = async (req, res) => {
       });
     }
 
-    // Get user's current password
-    const [users] = await db.query(
-      'SELECT password FROM users WHERE id = ?',
-      [userId]
-    );
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { password: true }
+    });
 
-    if (users.length === 0) {
+    if (!user) {
       return res.status(404).json({
         success: false,
         message: 'User not found'
       });
     }
 
-    // Verify current password
-    const isPasswordValid = await bcrypt.compare(currentPassword, users[0].password);
+    const isPasswordValid = await bcrypt.compare(
+      currentPassword,
+      user.password
+    );
 
     if (!isPasswordValid) {
       return res.status(401).json({
@@ -370,15 +404,15 @@ export const changePassword = async (req, res) => {
       });
     }
 
-    // Hash new password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(newPassword, salt);
 
-    // Update password
-    await db.query(
-      'UPDATE users SET password = ? WHERE id = ?',
-      [hashedPassword, userId]
-    );
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        password: hashedPassword
+      }
+    });
 
     res.status(200).json({
       success: true,

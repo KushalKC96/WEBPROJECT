@@ -1,12 +1,12 @@
 import jwt from 'jsonwebtoken';
-import db from '../config/database.js';
+import prisma from '../config/prisma.js';
+
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this';
 
 // Middleware to verify JWT token
 export const verifyToken = async (req, res, next) => {
   try {
-    // Get token from header
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -19,24 +19,26 @@ export const verifyToken = async (req, res, next) => {
     const token = authHeader.split(' ')[1];
 
     try {
-      // Verify token
       const decoded = jwt.verify(token, JWT_SECRET);
-      
-      // Get user from database
-      const [users] = await db.query(
-        'SELECT id, name, email, phone FROM users WHERE id = ?',
-        [decoded.id]
-      );
 
-      if (users.length === 0) {
+      const user = await prisma.user.findUnique({
+        where: { id: decoded.id },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true
+        }
+      });
+
+      if (!user) {
         return res.status(401).json({
           success: false,
           message: 'User not found'
         });
       }
 
-      // Add user to request object
-      req.user = users[0];
+      req.user = user;
       next();
 
     } catch (error) {
@@ -55,6 +57,7 @@ export const verifyToken = async (req, res, next) => {
   }
 };
 
+
 // Middleware to verify session token (cookie-based)
 export const verifySession = async (req, res, next) => {
   try {
@@ -67,16 +70,26 @@ export const verifySession = async (req, res, next) => {
       });
     }
 
-    // Check session in database
-    const [sessions] = await db.query(
-      `SELECT s.user_id, s.expires_at, u.id, u.name, u.email, u.phone 
-       FROM sessions s 
-       JOIN users u ON s.user_id = u.id 
-       WHERE s.session_token = ? AND s.expires_at > NOW()`,
-      [sessionToken]
-    );
+    const session = await prisma.session.findFirst({
+      where: {
+        sessionToken,
+        expiresAt: {
+          gt: new Date()
+        }
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true
+          }
+        }
+      }
+    });
 
-    if (sessions.length === 0) {
+    if (!session) {
       res.clearCookie('session_token');
       return res.status(401).json({
         success: false,
@@ -84,13 +97,7 @@ export const verifySession = async (req, res, next) => {
       });
     }
 
-    // Add user to request object
-    req.user = {
-      id: sessions[0].id,
-      name: sessions[0].name,
-      email: sessions[0].email,
-      phone: sessions[0].phone
-    };
+    req.user = session.user;
 
     next();
 
@@ -128,20 +135,19 @@ export const authenticate = async (req, res, next) => {
 export const authorize = (...roles) => {
   return async (req, res, next) => {
     try {
-      // Get user role from database
-      const [users] = await db.query(
-        'SELECT role FROM users WHERE id = ?',
-        [req.user.id]
-      );
+      const user = await prisma.user.findUnique({
+        where: { id: req.user.id },
+        select: { role: true }
+      });
 
-      if (users.length === 0) {
+      if (!user) {
         return res.status(404).json({
           success: false,
           message: 'User not found'
         });
       }
 
-      const userRole = users[0].role;
+      const userRole = user.role;
 
       if (!roles.includes(userRole)) {
         return res.status(403).json({
