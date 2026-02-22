@@ -3,6 +3,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import authRoutes from './src/routes/authRoutes.js';
+import hardwareRoutes from './src/routes/hardwareRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -21,6 +22,7 @@ app.use(cookieParser());
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/hardware', hardwareRoutes);
 
 // Test route
 app.get('/api/health', (req, res) => {
