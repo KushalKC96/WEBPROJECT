@@ -22,12 +22,15 @@ export const register = async (req, res) => {
       });
     }
 
-    // Check if user already exists
+    console.log('Registration attempt for:', email);
+
+    // Check if user already exists (PRISMA WAY)
     const existingUser = await prisma.user.findUnique({
       where: { email }
     });
 
     if (existingUser) {
+      console.log('Email already exists');
       return res.status(400).json({
         success: false,
         message: 'Email already registered'
@@ -35,10 +38,12 @@ export const register = async (req, res) => {
     }
 
     // Hash password
+    console.log('Hashing password...');
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Insert user into database
+    // Create user (PRISMA WAY)
+    console.log('Creating user in database...');
     const user = await prisma.user.create({
       data: {
         name,
@@ -48,12 +53,16 @@ export const register = async (req, res) => {
       }
     });
 
+    console.log('✅ User created:', user.id, user.email);
+
     // Create JWT token
     const token = jwt.sign(
-      { id: user.id, email },
+      { id: user.id, email: user.email },
       JWT_SECRET,
       { expiresIn: JWT_EXPIRE }
     );
+
+    console.log('JWT token generated');
 
     res.status(201).json({
       success: true,
@@ -61,9 +70,9 @@ export const register = async (req, res) => {
       token,
       user: {
         id: user.id,
-        name,
-        email,
-        phone
+        name: user.name,
+        email: user.email,
+        phone: user.phone
       }
     });
 
@@ -75,6 +84,7 @@ export const register = async (req, res) => {
     });
   }
 };
+
 
 // Login user
 export const login = async (req, res) => {
