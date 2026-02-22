@@ -1,7 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-// import db from '../config/database.js';
 import prisma from '../config/prisma.js';
 
 
@@ -29,7 +28,6 @@ export const register = async (req, res) => {
     });
 
     if (existingUser) {
-      console.log('Email already exists:', email);
       return res.status(400).json({
         success: false,
         message: 'Email already registered'
@@ -41,7 +39,6 @@ export const register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // Insert user into database
-    console.log('Creating user in database...');
     const user = await prisma.user.create({
       data: {
         name,
@@ -51,11 +48,9 @@ export const register = async (req, res) => {
       }
     });
 
-    console.log('User created:', user.id, user.email);
-
     // Create JWT token
     const token = jwt.sign(
-      { id: result.insertId, email },
+      { id: user.id, email },
       JWT_SECRET,
       { expiresIn: JWT_EXPIRE }
     );
@@ -65,7 +60,7 @@ export const register = async (req, res) => {
       message: 'User registered successfully',
       token,
       user: {
-        id: result.insertId,
+        id: user.id,
         name,
         email,
         phone
@@ -100,7 +95,6 @@ export const login = async (req, res) => {
     });
 
     if (!user) {
-      console.log('User not found:', email);
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials'
@@ -141,8 +135,6 @@ export const login = async (req, res) => {
         expiresAt: sessionExpiry
       }
     });
-
-    console.log('Session created');
 
     // Set session cookie
     res.cookie('session_token', sessionToken, {
