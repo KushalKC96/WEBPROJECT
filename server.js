@@ -7,7 +7,6 @@ import hardwareRoutes from './src/routes/hardwareRoutes.js';
 
 // Load environment variables
 dotenv.config();
-console.log('DB_PASSWORD:', process.env.DB_PASSWORD);
 
 const app = express();
 

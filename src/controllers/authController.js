@@ -105,7 +105,6 @@ export const login = async (req, res) => {
     });
 
     if (!user) {
-      console.log('User not found:', email);
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials'
@@ -146,8 +145,6 @@ export const login = async (req, res) => {
         expiresAt: sessionExpiry
       }
     });
-
-    console.log('Session created');
 
     // Set session cookie
     res.cookie('session_token', sessionToken, {
