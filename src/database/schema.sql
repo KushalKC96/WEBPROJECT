@@ -1,4 +1,4 @@
--- Create database
+hardware-- Create database
 CREATE DATABASE IF NOT EXISTS hardware_hub;
 USE hardware_hub;
 
