@@ -20,7 +20,7 @@ const sampleHardware = [
     price: 16500.00,
     rentalPricePerDay: 2500.00,
     stockQuantity: 8,
-    imageUrl: "https://images.unsplash.com/photo-1572981779307-38b8cabb2407?w=500"
+    imageUrl: "https://images.unsplash.com/photo-1513467655676-561b7d489a88?w=500"
   },
   {
     name: "Hammer",
@@ -29,7 +29,7 @@ const sampleHardware = [
     price: 2500.00,
     rentalPricePerDay: 350.00,
     stockQuantity: 25,
-    imageUrl: "https://images.unsplash.com/photo-1603281873175-ce8c0bea71cf?w=500"
+    imageUrl: "https://images.unsplash.com/photo-1586864387967-d02ef85d93e8?w=500"
   },
   {
     name: "Wrench Set",
@@ -38,7 +38,7 @@ const sampleHardware = [
     price: 6300.00,
     rentalPricePerDay: 950.00,
     stockQuantity: 15,
-    imageUrl: "https://images.unsplash.com/photo-1614505241840-c98f1c4e8925?w=500"
+    imageUrl: "https://images.unsplash.com/photo-1585569695919-db237e7cc455?w=500"
   },
   {
     name: "Extension Ladder 20ft",
@@ -47,7 +47,7 @@ const sampleHardware = [
     price: 25500.00,
     rentalPricePerDay: 3800.00,
     stockQuantity: 5,
-    imageUrl: "https://images.unsplash.com/photo-1619976215249-e29ab62d82dc?w=500"
+    imageUrl: "https://images.unsplash.com/photo-1658261696674-c547f50a7f11?w=500"
   },
   {
     name: "Impact Driver",
@@ -56,7 +56,7 @@ const sampleHardware = [
     price: 12700.00,
     rentalPricePerDay: 2200.00,
     stockQuantity: 12,
-    imageUrl: "https://images.unsplash.com/photo-1530124566582-a618bc2615dc?w=500"
+    imageUrl: "https://images.unsplash.com/photo-1592054286113-649ba108e968?w=500"
   },
   {
     name: "Tape Measure 25ft",
@@ -65,7 +65,7 @@ const sampleHardware = [
     price: 1600.00,
     rentalPricePerDay: 250.00,
     stockQuantity: 30,
-    imageUrl: "https://images.unsplash.com/photo-1615719413546-198b25453f85?w=500"
+    imageUrl: "https://images.unsplash.com/photo-1559647746-9b2f216d2dc3?w=500"
   },
   {
     name: "Angle Grinder",
@@ -74,7 +74,7 @@ const sampleHardware = [
     price: 10200.00,
     rentalPricePerDay: 1500.00,
     stockQuantity: 7,
-    imageUrl: "https://images.unsplash.com/photo-1563453392212-326f5e854473?w=500"
+    imageUrl: "https://images.unsplash.com/photo-1734888369502-3e01d4c0a46e?w=500"
   },
   {
     name: "Tool Box",
@@ -83,16 +83,16 @@ const sampleHardware = [
     price: 38200.00,
     rentalPricePerDay: null,  // Not available for rent, buy only
     stockQuantity: 4,
-    imageUrl: "https://images.unsplash.com/photo-1587213811864-1e62ed923f66?w=500"
+    imageUrl: "https://images.unsplash.com/photo-1615746363486-92cd8c5e0a90?w=500"
   },
   {
     name: "Safety Goggles",
-    category: "Safety Equipment",
+    category: "Safety Gear",
     description: "Impact-resistant safety glasses with anti-fog coating",
     price: 1200.00,
     rentalPricePerDay: null,  // Not available for rent
     stockQuantity: 50,
-    imageUrl: "https://images.unsplash.com/photo-1626788126607-e388f24c87c4?w=500"
+    imageUrl: "https://images.unsplash.com/photo-1606196285832-d14967816606?w=500"
   },
   {
     name: "Jigsaw",
@@ -101,7 +101,7 @@ const sampleHardware = [
     price: 8900.00,
     rentalPricePerDay: 1400.00,
     stockQuantity: 9,
-    imageUrl: "https://images.unsplash.com/photo-1572981779307-38b8cabb2407?w=500"
+    imageUrl: "https://images.pexels.com/photos/8447895/pexels-photo-8447895.jpeg?w=500"
   },
   {
     name: "Paint Sprayer",
@@ -110,7 +110,7 @@ const sampleHardware = [
     price: 15800.00,
     rentalPricePerDay: 2800.00,
     stockQuantity: 6,
-    imageUrl: "https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=500"
+    imageUrl: "https://plus.unsplash.com/premium_photo-1663047450953-2251c9d5f2b0?w=500"
   },
   {
     name: "Nail Gun",
@@ -119,7 +119,7 @@ const sampleHardware = [
     price: 14200.00,
     rentalPricePerDay: 2400.00,
     stockQuantity: 8,
-    imageUrl: "https://images.unsplash.com/photo-1504148455328-c376907d081c?w=500"
+    imageUrl: "https://plus.unsplash.com/premium_photo-1679251457487-20872e51855b?w=500"
   },
   {
     name: "Screwdriver Set",
@@ -128,7 +128,7 @@ const sampleHardware = [
     price: 2800.00,
     rentalPricePerDay: 400.00,
     stockQuantity: 20,
-    imageUrl: "https://images.unsplash.com/photo-1614505241840-c98f1c4e8925?w=500"
+    imageUrl: "https://images.pexels.com/photos/19144413/pexels-photo-19144413.jpeg?w=500"
   },
   {
     name: "Work Gloves",
@@ -137,7 +137,7 @@ const sampleHardware = [
     price: 850.00,
     rentalPricePerDay: null,
     stockQuantity: 100,
-    imageUrl: "https://images.unsplash.com/photo-1626788126607-e388f24c87c4?w=500"
+    imageUrl: "https://images.unsplash.com/photo-1582586131076-6c308a437385?w=500"
   }
 ];
 
