@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import authRoutes from './src/routes/authRoutes.js';
 import hardwareRoutes from './src/routes/hardwareRoutes.js';
 import professionalRoutes from './src/routes/professionalRoutes.js';
+import rentalRoutes from './src/routes/rentalRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -24,6 +25,7 @@ app.use(cookieParser());
 app.use('/api/auth', authRoutes);
 app.use('/api/hardware', hardwareRoutes);
 app.use('/api/professionals', professionalRoutes);
+app.use('/api/rentals', rentalRoutes);
 
 // Test route
 app.get('/api/health', (req, res) => {

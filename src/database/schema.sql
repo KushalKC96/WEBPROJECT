@@ -1,6 +1,8 @@
-hardware-- Create database
+-- Create database
 CREATE DATABASE IF NOT EXISTS hardware_hub;
 USE hardware_hub;
+-- delete from hardware;
+-- alter table hardware auto_increment =1;
 
 -- ============================================
 -- USERS & AUTHENTICATION TABLES
@@ -124,6 +126,9 @@ CREATE TABLE rental (
   INDEX idx_status (status),
   INDEX idx_dates (start_date, end_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- delete from rental;
+-- alter table rental auto_increment=1;
 
 -- ============================================
 -- BOOKING TABLE
