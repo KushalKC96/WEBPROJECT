@@ -1,8 +1,7 @@
 -- Create database
 CREATE DATABASE IF NOT EXISTS hardware_hub;
 USE hardware_hub;
--- delete from hardware;
--- alter table hardware auto_increment =1;
+
 
 -- ============================================
 -- USERS & AUTHENTICATION TABLES
@@ -83,6 +82,7 @@ CREATE TABLE professional (
   INDEX idx_available (is_available)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+
 -- ============================================
 -- PAYMENT TABLE
 -- ============================================
@@ -127,8 +127,7 @@ CREATE TABLE rental (
   INDEX idx_dates (start_date, end_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- delete from rental;
--- alter table rental auto_increment=1;
+
 
 -- ============================================
 -- BOOKING TABLE
@@ -187,3 +186,16 @@ select * from professional;
 select * from payment;
 select * from rental;
 select * from booking;
+
+
+-- delete from professional;
+-- alter table professional auto_increment =1;
+
+-- delete from hardware;
+-- alter table hardware auto_increment =1;
+
+-- delete from rental;
+-- alter table rental auto_increment=1;
+
+-- delete from booking;
+-- alter table booking auto_increment=1;

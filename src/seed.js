@@ -141,25 +141,115 @@ const sampleHardware = [
   }
 ];
 
+const sampleProfessionals = [
+  {
+    skill: 'Electrician',
+    bio: 'Licensed electrician with expertise in residential and commercial wiring, panel upgrades, and solar installations.',
+    experienceYears: 12,
+    hourlyRate: 1500.00,
+    rating: 4.8,
+    isAvailable: true
+  },
+  {
+    skill: 'Electrician',
+    bio: 'Specialist in home automation, CCTV installation, and electrical troubleshooting.',
+    experienceYears: 5,
+    hourlyRate: 1100.00,
+    rating: 4.3,
+    isAvailable: true
+  },
+  {
+    skill: 'Plumber',
+    bio: 'Expert plumber specializing in pipe fitting, bathroom installations, and water heater repairs.',
+    experienceYears: 8,
+    hourlyRate: 1200.00,
+    rating: 4.6,
+    isAvailable: true
+  },
+  {
+    skill: 'Plumber',
+    bio: 'Experienced in drainage systems, water tank installation, and emergency plumbing repairs.',
+    experienceYears: 9,
+    hourlyRate: 1300.00,
+    rating: 4.5,
+    isAvailable: false
+  },
+  {
+    skill: 'Carpenter',
+    bio: 'Skilled carpenter with experience in custom furniture, door/window fitting, and wooden flooring.',
+    experienceYears: 15,
+    hourlyRate: 1800.00,
+    rating: 4.9,
+    isAvailable: true
+  },
+  {
+    skill: 'Welder',
+    bio: 'Certified welder with experience in steel fabrication, gate/grille making, and structural welding.',
+    experienceYears: 10,
+    hourlyRate: 2000.00,
+    rating: 4.7,
+    isAvailable: false
+  },
+  {
+    skill: 'Mason',
+    bio: 'Expert mason for brickwork, plastering, tiling, and concrete work for both residential and commercial projects.',
+    experienceYears: 20,
+    hourlyRate: 1600.00,
+    rating: 4.9,
+    isAvailable: true
+  },
+  {
+    skill: 'Painter',
+    bio: 'Professional painter specializing in interior and exterior painting, texture finishes, and waterproofing.',
+    experienceYears: 6,
+    hourlyRate: 900.00,
+    rating: 4.4,
+    isAvailable: true
+  },
+  {
+    skill: 'HVAC Technician',
+    bio: 'Experienced HVAC technician for AC installation, servicing, and repair of all major brands.',
+    experienceYears: 7,
+    hourlyRate: 1700.00,
+    rating: 4.6,
+    isAvailable: true
+  },
+  {
+    skill: 'General Labour',
+    bio: 'Reliable general labourer for site cleaning, material handling, demolition, and basic construction tasks.',
+    experienceYears: 3,
+    hourlyRate: 700.00,
+    rating: 4.1,
+    isAvailable: true
+  }
+];
+
 async function seedDatabase() {
   console.log('🌱 Starting database seed with NPR prices...');
 
   try {
-    // Clear existing hardware (optional)
-    console.log('🗑️ Clearing existing hardware...');
+    // Clear existing data
+    console.log('🗑️ Clearing existing hardware and professionals...');
     await prisma.hardware.deleteMany();
+    await prisma.professional.deleteMany();
 
     // Insert sample hardware
     console.log('➕ Adding sample hardware with Nepali Rupee prices...');
     for (const item of sampleHardware) {
-      const hardware = await prisma.hardware.create({
-        data: item
-      });
+      const hardware = await prisma.hardware.create({ data: item });
       console.log(`✅ Created: ${hardware.name} - NPR ${hardware.price}`);
     }
+    console.log(`📦 Added ${sampleHardware.length} hardware items`);
+
+    // Insert sample professionals
+    console.log('\n➕ Adding sample professionals...');
+    for (const item of sampleProfessionals) {
+      const pro = await prisma.professional.create({ data: item });
+      console.log(`✅ Created: ${pro.skill} - NPR ${pro.hourlyRate}/hr`);
+    }
+    console.log(`� Added ${sampleProfessionals.length} professionals`);
 
     console.log('\n🎉 Database seeded successfully!');
-    console.log(`📦 Added ${sampleHardware.length} hardware items`);
     console.log('💰 All prices in Nepali Rupees (NPR)');
 
   } catch (error) {
