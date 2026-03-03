@@ -138,7 +138,16 @@ const sampleHardware = [
     rentalPricePerDay: null,
     stockQuantity: 100,
     imageUrl: "https://images.unsplash.com/photo-1582586131076-6c308a437385?w=500"
-  }
+  },
+  {
+  "name": "Digital Soldering Iron 60W",
+  "category": "Electrical Tools",
+  "description": "Adjustable temperature soldering iron suitable for electronics repair, circuit board work, and DIY projects.",
+  "price": 1000,
+  "rentalPricePerDay": 400,
+  "stockQuantity": 15,
+  "imageUrl": "https://plus.unsplash.com/premium_photo-1664301917670-74c6b80ff913?w=500"
+}
 ];
 
 const sampleProfessionals = [
