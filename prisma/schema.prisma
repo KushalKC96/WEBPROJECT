@@ -13,14 +13,14 @@ model User {
   email            String         @unique(map: "email") @db.VarChar(100)
   password         String         @db.VarChar(255)
   phone            String?        @db.VarChar(20)
-  role             Role?          @default(user)
+  role             Role         @default(user)
   resetToken       String?        @map("reset_token") @db.VarChar(255)
   resetTokenExpire DateTime?      @map("reset_token_expire") @db.DateTime(0)
   createdAt        DateTime?      @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt        DateTime?      @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
   bookings         Booking[]
   payments         Payment[]
-  professionals    Professional[]
+  professional     Professional?
   rentals          Rental[]
   sessions         Session[]
 
@@ -64,7 +64,7 @@ model Hardware {
 
 model Professional {
   professionalId  Int       @id @default(autoincrement()) @map("professional_id")
-  userId          Int?      @map("user_id")
+  userId          Int?      @unique @map("user_id")
   skill           String    @db.VarChar(100)
   experienceYears Int?      @map("experience_years")
   hourlyRate      Decimal?  @map("hourly_rate") @db.Decimal(10, 2)
@@ -148,4 +148,5 @@ model Booking {
 enum Role {
   user
   admin
+  professional
 }
