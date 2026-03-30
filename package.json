@@ -7,8 +7,12 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
+<<<<<<< HEAD
     "studio": "node ./node_modules/prisma/build/index.js studio",
     "generate": "node ./node_modules/prisma/build/index.js generate"
+=======
+    "studio": "node ./node_modules/prisma/build/index.js studio"
+>>>>>>> ea100e653a6180d720fc96e391acbc22ade5b8b5
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

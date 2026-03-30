@@ -3,11 +3,18 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import authRoutes from './src/routes/authRoutes.js';
+<<<<<<< HEAD
 import hardwareRoutes from './src/routes/hardwareRoutes.js';
 import professionalRoutes from './src/routes/professionalRoutes.js';
 import rentalRoutes from './src/routes/rentalRoutes.js';
 import bookingRoutes from './src/routes/bookingRoutes.js';
 import paymentRoutes from './src/routes/paymentRoutes.js';
+=======
+import professionalRoutes from './src/routes/professionalRoutes.js';
+import hardwareRoutes from './src/routes/hardwareRoutes.js';
+import rentalRoutes from './src/routes/rentalRoutes.js';
+import bookingRoutes from './src/routes/bookingRoutes.js';
+>>>>>>> ea100e653a6180d720fc96e391acbc22ade5b8b5
 
 // Load environment variables
 dotenv.config();
@@ -16,7 +23,23 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173', // Your React app URL
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+
+    const allowed = [
+      process.env.FRONTEND_URL,
+      'http://localhost:5173',
+      'http://127.0.0.1:5173',
+    ].filter(Boolean);
+
+    const isLocalDev = /^https?:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin);
+
+    if (allowed.includes(origin) || isLocalDev) {
+      return callback(null, true);
+    }
+
+    return callback(new Error('Not allowed by CORS'));
+  },
   credentials: true // Allow cookies
 }));
 app.use(express.json());
@@ -25,11 +48,18 @@ app.use(cookieParser());
 
 // Routes
 app.use('/api/auth', authRoutes);
+<<<<<<< HEAD
 app.use('/api/hardware', hardwareRoutes);
 app.use('/api/professionals', professionalRoutes);
 app.use('/api/rentals', rentalRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/payments', paymentRoutes);
+=======
+app.use('/api/professionals', professionalRoutes);
+app.use('/api/hardware', hardwareRoutes);
+app.use('/api/rentals', rentalRoutes);
+app.use('/api/bookings', bookingRoutes);
+>>>>>>> ea100e653a6180d720fc96e391acbc22ade5b8b5
 
 // Test route
 app.get('/api/health', (req, res) => {

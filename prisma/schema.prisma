@@ -7,9 +7,22 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ============================================
-// USERS & AUTHENTICATION
-// ============================================
+model User {
+  id               Int            @id @default(autoincrement())
+  name             String         @db.VarChar(100)
+  email            String         @unique(map: "email") @db.VarChar(100)
+  password         String         @db.VarChar(255)
+  phone            String?        @db.VarChar(20)
+  role             Role         @default(user)
+  resetToken       String?        @map("reset_token") @db.VarChar(255)
+  resetTokenExpire DateTime?      @map("reset_token_expire") @db.DateTime(0)
+  createdAt        DateTime?      @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt        DateTime?      @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+  bookings         Booking[]
+  payments         Payment[]
+  professional     Professional?
+  rentals          Rental[]
+  sessions         Session[]
 
 model User {
   id                 Int            @id @default(autoincrement())
@@ -86,9 +99,18 @@ model Hardware {
   @@map("hardware")
 }
 
-// ============================================
-// PROFESSIONALS
-// ============================================
+model Professional {
+  professionalId  Int       @id @default(autoincrement()) @map("professional_id")
+  userId          Int?      @unique @map("user_id")
+  skill           String    @db.VarChar(100)
+  experienceYears Int?      @map("experience_years")
+  hourlyRate      Decimal?  @map("hourly_rate") @db.Decimal(10, 2)
+  bio             String?   @db.Text
+  rating          Decimal?  @default(0.00) @db.Decimal(3, 2)
+  isAvailable     Boolean?  @default(true) @map("is_available")
+  createdAt       DateTime? @default(now()) @map("created_at") @db.Timestamp(0)
+  bookings        Booking[]
+  user            User?     @relation(fields: [userId], references: [id], onUpdate: NoAction, map: "professional_ibfk_1")
 
 model Professional {
   professionalId   Int       @id @default(autoincrement()) @map("professional_id")
@@ -188,4 +210,10 @@ model Booking {
   @@index([status])
   @@index([bookingDate])
   @@map("booking")
+}
+
+enum Role {
+  user
+  admin
+  professional
 }

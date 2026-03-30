@@ -27,7 +27,8 @@ export const verifyToken = async (req, res, next) => {
           id: true,
           name: true,
           email: true,
-          phone: true
+          phone: true,
+          role: true
         }
       });
 
@@ -83,7 +84,8 @@ export const verifySession = async (req, res, next) => {
             id: true,
             name: true,
             email: true,
-            phone: true
+            phone: true,
+            role: true
           }
         }
       }
@@ -131,39 +133,23 @@ export const authenticate = async (req, res, next) => {
   });
 };
 
-// Optional: Role-based access control
+// Role-based access control
 export const authorize = (...roles) => {
-  return async (req, res, next) => {
-    try {
-      const user = await prisma.user.findUnique({
-        where: { id: req.user.id },
-        select: { role: true }
-      });
-
-      if (!user) {
-        return res.status(404).json({
-          success: false,
-          message: 'User not found'
-        });
-      }
-
-      const userRole = user.role;
-
-      if (!roles.includes(userRole)) {
-        return res.status(403).json({
-          success: false,
-          message: 'Access denied: insufficient permissions'
-        });
-      }
-
-      next();
-
-    } catch (error) {
-      console.error('Authorization error:', error);
-      res.status(500).json({
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({
         success: false,
-        message: 'Server error'
+        message: 'Authentication required'
       });
     }
+
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: `Access denied: requires ${roles.join(' or ')} role`
+      });
+    }
+
+    next();
   };
 };

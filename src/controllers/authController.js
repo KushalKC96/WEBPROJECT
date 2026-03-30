@@ -9,16 +9,61 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this';
 const JWT_EXPIRE = process.env.JWT_EXPIRE || '7d';
 const RESET_TOKEN_EXPIRE = 3600000; // 1 hour in milliseconds
 
+const ensureProfessionalProfile = async (userId, fallbackSkill = 'General Professional') => {
+  const existing = await prisma.professional.findUnique({
+    where: { userId },
+    select: { professionalId: true },
+  });
+
+  if (!existing) {
+    await prisma.professional.create({
+      data: {
+        userId,
+        skill: fallbackSkill,
+        experienceYears: 0,
+        hourlyRate: null,
+        bio: null,
+        isAvailable: true,
+      },
+    });
+  }
+};
+
 // Register new user
 export const register = async (req, res) => {
   try {
-    const { name, email, password, phone } = req.body;
+    const { name, email, password, phone, role, skill, experienceYears, hourlyRate, bio } = req.body;
+    const normalizedRole = role === 'professional' ? 'professional' : 'user';
 
     // Validation
     if (!name || !email || !password) {
       return res.status(400).json({
         success: false,
         message: 'Please provide name, email and password'
+      });
+    }
+
+    if (normalizedRole === 'professional' && !skill) {
+      return res.status(400).json({
+        success: false,
+        message: 'Skill is required for professional registration'
+      });
+    }
+
+    const parsedExperienceYears = experienceYears != null && experienceYears !== '' ? parseInt(experienceYears, 10) : 0;
+    const parsedHourlyRate = hourlyRate != null && hourlyRate !== '' ? parseFloat(hourlyRate) : null;
+
+    if (Number.isNaN(parsedExperienceYears) || parsedExperienceYears < 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Experience years must be a non-negative number'
+      });
+    }
+
+    if (parsedHourlyRate != null && (Number.isNaN(parsedHourlyRate) || parsedHourlyRate < 0)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Hourly rate must be a non-negative number'
       });
     }
 
@@ -44,20 +89,44 @@ export const register = async (req, res) => {
 
     // Create user (PRISMA WAY)
     console.log('Creating user in database...');
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        password: hashedPassword,
-        phone: phone || null,
-        // Identity document is optional and only used for rentals.
-        // For now, metadata can be added later via a separate endpoint when the user uploads it.
+    const user = await prisma.$transaction(async (tx) => {
+      const createdUser = await tx.user.create({
+        data: {
+          name,
+          email,
+          password: hashedPassword,
+          phone: phone || null,
+          role: normalizedRole
+        }
+      });
+
+      if (normalizedRole === 'professional') {
+        await tx.professional.create({
+          data: {
+            userId: createdUser.id,
+            skill,
+            experienceYears: parsedExperienceYears,
+            hourlyRate: parsedHourlyRate,
+            bio: bio || null,
+            isAvailable: true,
+          }
+        });
       }
+
+      return createdUser;
     });
+
+    if (normalizedRole === 'professional') {
+      await ensureProfessionalProfile(user.id, skill);
+    }
 
     console.log('✅ User created:', user.id, user.email);
 
     // Create JWT token
+    if (user.role === 'professional') {
+      await ensureProfessionalProfile(user.id);
+    }
+
     const token = jwt.sign(
       { id: user.id, email: user.email },
       JWT_SECRET,
@@ -74,7 +143,8 @@ export const register = async (req, res) => {
         id: user.id,
         name: user.name,
         email: user.email,
-        phone: user.phone
+        phone: user.phone,
+        role: user.role
       }
     });
 
@@ -164,7 +234,8 @@ export const login = async (req, res) => {
         id: user.id,
         name: user.name,
         email: user.email,
-        phone: user.phone
+        phone: user.phone,
+        role: user.role
       }
     });
 
@@ -281,8 +352,8 @@ export const forgotPassword = async (req, res) => {
     await prisma.user.update({
       where: { id: user.id },
       data: {
-        reset_token: hashedToken,
-        reset_token_expire: resetExpire
+        resetToken: hashedToken,
+        resetTokenExpire: resetExpire
       }
     });
 
@@ -331,8 +402,8 @@ export const resetPassword = async (req, res) => {
 
     const user = await prisma.user.findFirst({
       where: {
-        reset_token: hashedToken,
-        reset_token_expire: {
+        resetToken: hashedToken,
+        resetTokenExpire: {
           gt: new Date()
         }
       },
@@ -353,8 +424,8 @@ export const resetPassword = async (req, res) => {
       where: { id: user.id },
       data: {
         password: hashedPassword,
-        reset_token: null,
-        reset_token_expire: null
+        resetToken: null,
+        resetTokenExpire: null
       }
     });
 
