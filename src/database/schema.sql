@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
   email VARCHAR(100) UNIQUE NOT NULL,
   password VARCHAR(255) NOT NULL,
   phone VARCHAR(20),
-  role ENUM('user', 'admin') DEFAULT 'user',
+  role ENUM('user', 'admin', 'professional') NOT NULL DEFAULT 'user',
   reset_token VARCHAR(255),
   reset_token_expire DATETIME,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

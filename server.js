@@ -8,6 +8,7 @@ import professionalRoutes from './src/routes/professionalRoutes.js';
 import rentalRoutes from './src/routes/rentalRoutes.js';
 import bookingRoutes from './src/routes/bookingRoutes.js';
 import paymentRoutes from './src/routes/paymentRoutes.js';
+import { initializePrisma } from './src/config/prisma.js';
 
 // Load environment variables
 dotenv.config();
@@ -33,7 +34,7 @@ app.use(cors({
 
     return callback(new Error('Not allowed by CORS'));
   },
-  credentials: true // Allow cookies
+  credentials: true,
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -49,10 +50,10 @@ app.use('/api/payments', paymentRoutes);
 
 // Test route
 app.get('/api/health', (req, res) => {
-  res.json({ 
-    success: true, 
+  res.json({
+    success: true,
     message: 'Hardware Hub API is running',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -61,7 +62,7 @@ app.use((err, req, res, next) => {
   console.error('Error:', err);
   res.status(err.status || 500).json({
     success: false,
-    message: err.message || 'Internal server error'
+    message: err.message || 'Internal server error',
   });
 });
 
@@ -69,15 +70,26 @@ app.use((err, req, res, next) => {
 app.use((req, res) => {
   res.status(404).json({
     success: false,
-    message: 'Route not found'
+    message: 'Route not found',
   });
 });
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`✓ Server running on port ${PORT}`);
-  console.log(`✓ Environment: ${process.env.NODE_ENV || 'development'}`);
-});
+const startServer = async () => {
+  try {
+    await initializePrisma();
+
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+      console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    });
+  } catch (error) {
+    console.error('Failed to initialize server:', error);
+    process.exit(1);
+  }
+};
+
+startServer();
 
 export default app;
