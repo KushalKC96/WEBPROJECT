@@ -502,3 +502,56 @@ export const changePassword = async (req, res) => {
     });
   }
 };
+
+// Optional: endpoint to attach/update identity document for rentals only
+export const uploadIdentityDocument = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { documentType, documentUrl } = req.body;
+
+    if (!documentType || !documentUrl) {
+      return res.status(400).json({
+        success: false,
+        message: 'documentType and documentUrl are required'
+      });
+    }
+
+    // Basic allow‑list for document types
+    const allowedTypes = ['passport', 'citizenship_card', 'national_id', 'driving_license'];
+    if (!allowedTypes.includes(documentType)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid documentType. Allowed: ${allowedTypes.join(', ')}`
+      });
+    }
+
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        identityDocumentType: documentType,
+        identityDocumentUrl: documentUrl,
+        isIdentityVerified: false // can be flipped by admin later
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        identityDocumentType: true,
+        identityDocumentUrl: true,
+        isIdentityVerified: true
+      }
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Identity document saved successfully',
+      user
+    });
+  } catch (error) {
+    console.error('Upload identity document error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error while saving identity document'
+    });
+  }
+};

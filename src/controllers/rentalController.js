@@ -1,45 +1,52 @@
 import prisma from '../config/prisma.js';
 
-// POST /api/rentals
+// ============================================
+// CREATE RENTAL BOOKING
+// ============================================
 export const createRental = async (req, res) => {
   try {
     const { hardwareId, startDate, endDate } = req.body;
-    const userId = req.user?.id;
+    const userId = req.user.id;
 
-    if (!userId) {
-      return res.status(401).json({ success: false, message: 'Authentication required' });
-    }
-
+    // Validation
     if (!hardwareId || !startDate || !endDate) {
       return res.status(400).json({
         success: false,
-        message: 'Please provide hardwareId, startDate, and endDate',
+        message: 'Please provide hardwareId, startDate, and endDate'
       });
     }
 
+    console.log('📦 Creating rental for user:', userId);
+
+    // Check if hardware exists and is available
     const hardware = await prisma.hardware.findUnique({
-      where: { hardwareId: parseInt(hardwareId, 10) },
+      where: { hardwareId: parseInt(hardwareId) }
     });
 
     if (!hardware) {
-      return res.status(404).json({ success: false, message: 'Hardware not found' });
+      return res.status(404).json({
+        success: false,
+        message: 'Hardware not found'
+      });
     }
 
-    if (!hardware.isAvailable || Number(hardware.stockQuantity || 0) <= 0) {
-      return res.status(400).json({ success: false, message: 'Hardware is not available for rent' });
+    if (!hardware.isAvailable || hardware.stockQuantity <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Hardware is not available for rent'
+      });
     }
 
     if (!hardware.rentalPricePerDay) {
-      return res.status(400).json({ success: false, message: 'This hardware is not available for rental' });
+      return res.status(400).json({
+        success: false,
+        message: 'This hardware is not available for rental'
+      });
     }
 
+    // Validate dates
     const start = new Date(startDate);
     const end = new Date(endDate);
-
-    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
-      return res.status(400).json({ success: false, message: 'Invalid startDate or endDate' });
-    }
-
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 

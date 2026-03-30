@@ -1,13 +1,16 @@
-import { Router } from 'express';
+import express from 'express';
+import * as hardwareController from '../controllers/hardwareController.js';
 import { authenticate, authorize } from '../middleware/authMiddleware.js';
-import { getAllHardware, getHardwareById, createHardware, updateHardware, deleteHardware } from '../controllers/hardwareController.js';
 
-const router = Router();
+const router = express.Router();
 
-router.get('/', getAllHardware);
-router.get('/:id', getHardwareById);
-router.post('/', authenticate, authorize('admin'), createHardware);
-router.put('/:id', authenticate, authorize('admin'), updateHardware);
-router.delete('/:id', authenticate, authorize('admin'), deleteHardware);
+// PUBLIC ROUTES
+router.get('/', hardwareController.getAllHardware);
+router.get('/:id', hardwareController.getHardwareById);
+
+// ADMIN ROUTES
+router.post('/', authenticate, authorize('admin'), hardwareController.createHardware);
+router.put('/:id', authenticate, authorize('admin'), hardwareController.updateHardware);
+router.delete('/:id', authenticate, authorize('admin'), hardwareController.deleteHardware);
 
 export default router;

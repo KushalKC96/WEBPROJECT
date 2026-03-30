@@ -1,6 +1,6 @@
 import prisma from '../config/prisma.js';
 
-// GET /api/hardware
+// GET ALL HARDWARE
 export const getAllHardware = async (req, res) => {
   try {
     const { category, minPrice, maxPrice, search, available } = req.query;
@@ -8,142 +8,111 @@ export const getAllHardware = async (req, res) => {
     const where = {};
 
     if (category) where.category = category;
-
     if (search) {
       where.OR = [
         { name: { contains: search } },
-        { description: { contains: search } },
+        { description: { contains: search } }
       ];
     }
-
     if (available === 'true') where.isAvailable = true;
-
     if (minPrice || maxPrice) {
       where.price = {};
       if (minPrice) where.price.gte = parseFloat(minPrice);
       if (maxPrice) where.price.lte = parseFloat(maxPrice);
     }
 
-    const data = await prisma.hardware.findMany({
+    const hardware = await prisma.hardware.findMany({
       where,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: 'desc' }
     });
 
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
-      count: data.length,
-      data,
+      count: hardware.length,
+      data: hardware
     });
   } catch (error) {
     console.error('Get hardware error:', error);
-    return res.status(500).json({ success: false, message: 'Server error' });
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 
-// GET /api/hardware/:id
+// GET SINGLE HARDWARE
 export const getHardwareById = async (req, res) => {
   try {
-    const id = parseInt(req.params.id, 10);
-    if (Number.isNaN(id)) {
-      return res.status(400).json({ success: false, message: 'Invalid hardware ID' });
-    }
-
-    const data = await prisma.hardware.findUnique({
-      where: { hardwareId: id },
+    const hardware = await prisma.hardware.findUnique({
+      where: { hardwareId: parseInt(req.params.id) }
     });
 
-    if (!data) {
+    if (!hardware) {
       return res.status(404).json({ success: false, message: 'Hardware not found' });
     }
 
-    return res.status(200).json({ success: true, data });
+    res.status(200).json({ success: true, data: hardware });
   } catch (error) {
-    console.error('Get hardware by id error:', error);
-    return res.status(500).json({ success: false, message: 'Server error' });
+    console.error('Get hardware by ID error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 
-// POST /api/hardware (admin)
+// CREATE HARDWARE
 export const createHardware = async (req, res) => {
   try {
-    const {
-      name,
-      category,
-      description,
-      price,
-      rentalPricePerDay,
-      stockQuantity,
-      imageUrl,
-      isAvailable,
-    } = req.body;
+    const { name, category, description, price, rentalPricePerDay, stockQuantity, imageUrl } = req.body;
 
-    if (!name || price == null) {
-      return res.status(400).json({ success: false, message: 'Name and price are required' });
+    if (!name || !category || !price) {
+      return res.status(400).json({ success: false, message: 'Name, category, and price are required' });
     }
 
-    const data = await prisma.hardware.create({
+    const hardware = await prisma.hardware.create({
       data: {
         name,
-        category: category || null,
+        category,
         description: description || null,
         price: parseFloat(price),
-        rentalPricePerDay: rentalPricePerDay != null && rentalPricePerDay !== '' ? parseFloat(rentalPricePerDay) : null,
-        stockQuantity: stockQuantity != null && stockQuantity !== '' ? parseInt(stockQuantity, 10) : 0,
-        imageUrl: imageUrl || null,
-        isAvailable: typeof isAvailable === 'boolean' ? isAvailable : true,
-      },
+        rentalPricePerDay: rentalPricePerDay ? parseFloat(rentalPricePerDay) : null,
+        stockQuantity: stockQuantity || 0,
+        imageUrl: imageUrl || null
+      }
     });
 
-    return res.status(201).json({ success: true, message: 'Hardware created', data });
+    res.status(201).json({ success: true, message: 'Hardware created', data: hardware });
   } catch (error) {
     console.error('Create hardware error:', error);
-    return res.status(500).json({ success: false, message: 'Server error' });
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 
-// PUT /api/hardware/:id (admin)
+// UPDATE HARDWARE
 export const updateHardware = async (req, res) => {
   try {
-    const id = parseInt(req.params.id, 10);
-    if (Number.isNaN(id)) {
-      return res.status(400).json({ success: false, message: 'Invalid hardware ID' });
-    }
+    const updateData = req.body;
 
-    const updateData = { ...req.body };
+    if (updateData.price) updateData.price = parseFloat(updateData.price);
+    if (updateData.rentalPricePerDay) updateData.rentalPricePerDay = parseFloat(updateData.rentalPricePerDay);
 
-    if (updateData.price != null && updateData.price !== '') updateData.price = parseFloat(updateData.price);
-    if (updateData.rentalPricePerDay != null && updateData.rentalPricePerDay !== '') {
-      updateData.rentalPricePerDay = parseFloat(updateData.rentalPricePerDay);
-    }
-    if (updateData.stockQuantity != null && updateData.stockQuantity !== '') {
-      updateData.stockQuantity = parseInt(updateData.stockQuantity, 10);
-    }
-
-    const data = await prisma.hardware.update({
-      where: { hardwareId: id },
-      data: updateData,
+    const hardware = await prisma.hardware.update({
+      where: { hardwareId: parseInt(req.params.id) },
+      data: updateData
     });
 
-    return res.status(200).json({ success: true, message: 'Hardware updated', data });
+    res.status(200).json({ success: true, message: 'Hardware updated', data: hardware });
   } catch (error) {
     console.error('Update hardware error:', error);
-    return res.status(500).json({ success: false, message: 'Server error' });
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 
-// DELETE /api/hardware/:id (admin)
+// DELETE HARDWARE
 export const deleteHardware = async (req, res) => {
   try {
-    const id = parseInt(req.params.id, 10);
-    if (Number.isNaN(id)) {
-      return res.status(400).json({ success: false, message: 'Invalid hardware ID' });
-    }
+    await prisma.hardware.delete({
+      where: { hardwareId: parseInt(req.params.id) }
+    });
 
-    await prisma.hardware.delete({ where: { hardwareId: id } });
-
-    return res.status(200).json({ success: true, message: 'Hardware deleted' });
+    res.status(200).json({ success: true, message: 'Hardware deleted' });
   } catch (error) {
     console.error('Delete hardware error:', error);
-    return res.status(500).json({ success: false, message: 'Server error' });
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 };

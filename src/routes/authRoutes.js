@@ -22,6 +22,7 @@ router.post('/reset-password/:token', authController.resetPassword);
 router.post('/logout', authenticate, authController.logout);
 router.get('/profile', authenticate, authController.getProfile);
 router.post('/change-password', authenticate, authController.changePassword);
+router.post('/identity-document', authenticate, authController.uploadIdentityDocument);
 
 
 
