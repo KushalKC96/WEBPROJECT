@@ -15,7 +15,10 @@ const parseNumber = (value) => {
 export const getAllProfessionals = async (req, res) => {
   try {
     const professionals = await prisma.professional.findMany({
-      where: { isAvailable: true },
+      where: {
+        isAvailable: true,
+        userId: { not: null }
+      },
       include: {
         user: {
           select: { id: true, name: true, email: true, phone: true }
@@ -37,7 +40,10 @@ export const searchProfessionals = async (req, res) => {
   try {
     const { skill, minRate, maxRate, minExp, minRating } = req.query;
 
-    const where = { isAvailable: true };
+    const where = {
+      isAvailable: true,
+      userId: { not: null }
+    };
 
     if (skill) {
       where.skill = { contains: skill, mode: 'insensitive' };

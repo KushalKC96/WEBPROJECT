@@ -225,3 +225,90 @@ export const returnRental = async (req, res) => {
     return res.status(500).json({ success: false, message: 'Server error' });
   }
 };
+
+// GET /api/rentals (admin)
+export const getAllRentals = async (req, res) => {
+  try {
+    const { status } = req.query;
+    const where = {};
+
+    if (status) where.status = status;
+
+    const data = await prisma.rental.findMany({
+      where,
+      include: {
+        hardware: {
+          select: {
+            hardwareId: true,
+            name: true,
+            category: true,
+            imageUrl: true,
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return res.status(200).json({ success: true, count: data.length, data });
+  } catch (error) {
+    console.error('Get all rentals error:', error);
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// PUT /api/rentals/:id/status (admin)
+export const updateRentalStatus = async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const { status } = req.body;
+
+    if (Number.isNaN(id)) {
+      return res.status(400).json({ success: false, message: 'Invalid rental ID' });
+    }
+
+    const allowed = ['pending', 'active', 'returned', 'completed', 'cancelled', 'overdue'];
+    if (!allowed.includes(status)) {
+      return res.status(400).json({ success: false, message: 'Invalid status value' });
+    }
+
+    const rental = await prisma.rental.findUnique({
+      where: { rentalId: id },
+      include: { hardware: true },
+    });
+
+    if (!rental) {
+      return res.status(404).json({ success: false, message: 'Rental not found' });
+    }
+
+    const data = await prisma.rental.update({
+      where: { rentalId: id },
+      data: {
+        status,
+        returnDate: status === 'returned' ? new Date() : rental.returnDate,
+      },
+    });
+
+    // Keep stock aligned when admin marks as returned.
+    if (status === 'returned' && rental.status !== 'returned') {
+      await prisma.hardware.update({
+        where: { hardwareId: rental.hardwareId },
+        data: {
+          stockQuantity: Number(rental.hardware.stockQuantity || 0) + 1,
+          isAvailable: true,
+        },
+      });
+    }
+
+    return res.status(200).json({ success: true, message: 'Rental status updated', data });
+  } catch (error) {
+    console.error('Update rental status error:', error);
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
