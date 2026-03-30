@@ -1,6 +1,5 @@
 import prisma from '../config/prisma.js';
 
-<<<<<<< HEAD
 // ─────────────────────────────────────────
 // GET ALL PROFESSIONALS
 // GET /api/professionals
@@ -68,43 +67,10 @@ export const getProfessionalsBySkill = async (req, res) => {
     });
   } catch (error) {
     console.error('Get professionals by skill error:', error);
-=======
-const parseNumber = (value) => {
-  if (value === undefined || value === null || value === '') return null;
-  const parsed = Number(value);
-  return Number.isNaN(parsed) ? null : parsed;
-};
-
-// ─────────────────────────────────────────────
-// PUBLIC
-// ─────────────────────────────────────────────
-
-// GET /api/professionals
-// Public – returns only available professionals
-export const getAllProfessionals = async (req, res) => {
-  try {
-    const professionals = await prisma.professional.findMany({
-      where: {
-        isAvailable: true,
-        userId: { not: null }
-      },
-      include: {
-        user: {
-          select: { id: true, name: true, email: true, phone: true }
-        }
-      },
-      orderBy: { rating: 'desc' }
-    });
-
-    res.status(200).json({ success: true, count: professionals.length, professionals });
-  } catch (error) {
-    console.error('getAllProfessionals error:', error);
->>>>>>> ea100e653a6180d720fc96e391acbc22ade5b8b5
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 
-<<<<<<< HEAD
 // ─────────────────────────────────────────
 // ADD NEW PROFESSIONAL
 // POST /api/professionals
@@ -152,78 +118,10 @@ export const deleteProfessional = async (req, res) => {
       where: { professionalId: parseInt(req.params.id) }
     });
 
-=======
-// GET /api/professionals/search?skill=&minRate=&maxRate=&minExp=&minRating=
-// Public – filter professionals
-export const searchProfessionals = async (req, res) => {
-  try {
-    const { skill, minRate, maxRate, minExp, minRating } = req.query;
-
-    const where = {
-      isAvailable: true,
-      userId: { not: null }
-    };
-
-    if (skill) {
-      where.skill = { contains: skill, mode: 'insensitive' };
-    }
-
-    if (minRate !== undefined || maxRate !== undefined) {
-      where.hourlyRate = {};
-      if (minRate !== undefined) where.hourlyRate.gte = parseFloat(minRate);
-      if (maxRate !== undefined) where.hourlyRate.lte = parseFloat(maxRate);
-    }
-
-    if (minExp !== undefined) {
-      where.experienceYears = { gte: parseInt(minExp) };
-    }
-
-    if (minRating !== undefined) {
-      where.rating = { gte: parseFloat(minRating) };
-    }
-
-    const professionals = await prisma.professional.findMany({
-      where,
-      include: {
-        user: {
-          select: { id: true, name: true, email: true, phone: true }
-        }
-      },
-      orderBy: { rating: 'desc' }
-    });
-
-    res.status(200).json({ success: true, count: professionals.length, professionals });
-  } catch (error) {
-    console.error('searchProfessionals error:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
-};
-
-// GET /api/professionals/:id
-// Public – single professional profile
-export const getProfessionalById = async (req, res) => {
-  try {
-    const professionalId = parseNumber(req.params.id);
-
-    if (!professionalId) {
-      return res.status(400).json({ success: false, message: 'Invalid professional id' });
-    }
-
-    const professional = await prisma.professional.findUnique({
-      where: { professionalId },
-      include: {
-        user: {
-          select: { id: true, name: true, email: true, phone: true }
-        }
-      }
-    });
-
->>>>>>> ea100e653a6180d720fc96e391acbc22ade5b8b5
     if (!professional) {
       return res.status(404).json({ success: false, message: 'Professional not found' });
     }
 
-<<<<<<< HEAD
     await prisma.professional.delete({
       where: { professionalId: parseInt(req.params.id) }
     });
@@ -234,13 +132,7 @@ export const getProfessionalById = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };
-=======
-    res.status(200).json({ success: true, professional });
-  } catch (error) {
-    console.error('getProfessionalById error:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
-};
+
 
 // ─────────────────────────────────────────────
 // PROFESSIONAL (self)
@@ -567,4 +459,3 @@ export const adminDeleteProfessional = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };
->>>>>>> ea100e653a6180d720fc96e391acbc22ade5b8b5

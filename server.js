@@ -3,18 +3,11 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import authRoutes from './src/routes/authRoutes.js';
-<<<<<<< HEAD
 import hardwareRoutes from './src/routes/hardwareRoutes.js';
 import professionalRoutes from './src/routes/professionalRoutes.js';
 import rentalRoutes from './src/routes/rentalRoutes.js';
 import bookingRoutes from './src/routes/bookingRoutes.js';
 import paymentRoutes from './src/routes/paymentRoutes.js';
-=======
-import professionalRoutes from './src/routes/professionalRoutes.js';
-import hardwareRoutes from './src/routes/hardwareRoutes.js';
-import rentalRoutes from './src/routes/rentalRoutes.js';
-import bookingRoutes from './src/routes/bookingRoutes.js';
->>>>>>> ea100e653a6180d720fc96e391acbc22ade5b8b5
 
 // Load environment variables
 dotenv.config();
@@ -48,18 +41,11 @@ app.use(cookieParser());
 
 // Routes
 app.use('/api/auth', authRoutes);
-<<<<<<< HEAD
 app.use('/api/hardware', hardwareRoutes);
 app.use('/api/professionals', professionalRoutes);
 app.use('/api/rentals', rentalRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/payments', paymentRoutes);
-=======
-app.use('/api/professionals', professionalRoutes);
-app.use('/api/hardware', hardwareRoutes);
-app.use('/api/rentals', rentalRoutes);
-app.use('/api/bookings', bookingRoutes);
->>>>>>> ea100e653a6180d720fc96e391acbc22ade5b8b5
 
 // Test route
 app.get('/api/health', (req, res) => {
