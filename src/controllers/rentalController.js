@@ -70,6 +70,24 @@ export const createRental = async (req, res) => {
 
     console.log(`💰 Rental: ${days} days × NPR ${hardware.rentalPricePerDay} = NPR ${totalAmount}`);
 
+    // Check identity document requirement for rentals
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        identityDocumentType: true,
+        identityDocumentUrl: true,
+        isIdentityVerified: true
+      }
+    });
+
+    if (!user || !user.identityDocumentType || !user.identityDocumentUrl) {
+      return res.status(400).json({
+        success: false,
+        message: 'Identity document is required to rent tools or machinery. Please upload a valid document in your profile first.'
+      });
+    }
+
     // Create rental
     const rental = await prisma.rental.create({
       data: {

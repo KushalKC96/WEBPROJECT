@@ -30,6 +30,11 @@ model User {
   payments           Payment[]
   professionals      Professional[]
 
+  // Optional identity verification document for rentals only
+  identityDocumentType   String?   @map("identity_document_type") @db.VarChar(50)
+  identityDocumentUrl    String?   @map("identity_document_url")  @db.VarChar(255)
+  isIdentityVerified     Boolean   @default(false) @map("is_identity_verified")
+
   @@index([email])
   @@index([resetToken])
   @@map("users")
