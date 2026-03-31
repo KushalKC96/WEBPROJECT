@@ -417,3 +417,38 @@ export const cancelBooking = async (req, res) => {
     });
   }
 };
+
+// DELETE /api/bookings/:id
+// Admin, booking owner user, or owner professional can delete
+export const deleteBooking = async (req, res) => {
+  try {
+    const bookingId = parseNumber(req.params.id);
+
+    if (!bookingId) {
+      return res.status(400).json({ success: false, message: 'Invalid booking id' });
+    }
+
+    const booking = await prisma.booking.findUnique({
+      where: { bookingId },
+      include: { professional: { select: { userId: true } } }
+    });
+
+    if (!booking) {
+      return res.status(404).json({ success: false, message: 'Booking not found' });
+    }
+
+    const isBookingOwner = req.user.id === booking.userId;
+    const isOwnerProfessional = booking.professional?.userId === req.user.id;
+
+    if (req.user.role !== 'admin' && !isBookingOwner && !isOwnerProfessional) {
+      return res.status(403).json({ success: false, message: 'Access denied' });
+    }
+
+    await prisma.booking.delete({ where: { bookingId } });
+
+    res.status(200).json({ success: true, message: 'Booking deleted successfully' });
+  } catch (error) {
+    console.error('deleteBooking error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
