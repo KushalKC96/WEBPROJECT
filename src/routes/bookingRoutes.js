@@ -1,4 +1,5 @@
-import { Router } from 'express';
+import express from 'express';
+import * as bookingController from '../controllers/bookingController.js';
 import { authenticate, authorize } from '../middleware/authMiddleware.js';
 import {
   getAllBookings,
@@ -10,7 +11,7 @@ import {
   deleteBooking
 } from '../controllers/bookingController.js';
 
-const router = Router();
+const router = express.Router();
 
 router.get('/', authenticate, authorize('admin'), getAllBookings);
 router.get('/user/:userId', authenticate, authorize('user', 'admin'), getUserBookings);

@@ -1,114 +1,138 @@
 import prisma from '../config/prisma.js';
 
-const parseNumber = (value) => {
-  if (value === undefined || value === null || value === '') return null;
-  const parsed = Number(value);
-  return Number.isNaN(parsed) ? null : parsed;
-};
-
-// ─────────────────────────────────────────────
-// PUBLIC
-// ─────────────────────────────────────────────
-
+// ─────────────────────────────────────────
+// GET ALL PROFESSIONALS
 // GET /api/professionals
-// Public – returns only available professionals
+// Public - anyone can view
+// ─────────────────────────────────────────
 export const getAllProfessionals = async (req, res) => {
   try {
     const professionals = await prisma.professional.findMany({
-      where: {
-        isAvailable: true,
-        userId: { not: null }
-      },
-      include: {
-        user: {
-          select: { id: true, name: true, email: true, phone: true }
-        }
-      },
-      orderBy: { rating: 'desc' }
+      orderBy: { createdAt: 'desc' }
     });
 
-    res.status(200).json({ success: true, count: professionals.length, professionals });
+    res.status(200).json({
+      success: true,
+      count: professionals.length,
+      data: professionals
+    });
   } catch (error) {
-    console.error('getAllProfessionals error:', error);
+    console.error('Get professionals error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 
-// GET /api/professionals/search?skill=&minRate=&maxRate=&minExp=&minRating=
-// Public – filter professionals
-export const searchProfessionals = async (req, res) => {
-  try {
-    const { skill, minRate, maxRate, minExp, minRating } = req.query;
-
-    const where = {
-      isAvailable: true,
-      userId: { not: null }
-    };
-
-    if (skill) {
-      where.skill = { contains: skill, mode: 'insensitive' };
-    }
-
-    if (minRate !== undefined || maxRate !== undefined) {
-      where.hourlyRate = {};
-      if (minRate !== undefined) where.hourlyRate.gte = parseFloat(minRate);
-      if (maxRate !== undefined) where.hourlyRate.lte = parseFloat(maxRate);
-    }
-
-    if (minExp !== undefined) {
-      where.experienceYears = { gte: parseInt(minExp) };
-    }
-
-    if (minRating !== undefined) {
-      where.rating = { gte: parseFloat(minRating) };
-    }
-
-    const professionals = await prisma.professional.findMany({
-      where,
-      include: {
-        user: {
-          select: { id: true, name: true, email: true, phone: true }
-        }
-      },
-      orderBy: { rating: 'desc' }
-    });
-
-    res.status(200).json({ success: true, count: professionals.length, professionals });
-  } catch (error) {
-    console.error('searchProfessionals error:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
-};
-
+// ─────────────────────────────────────────
+// GET SINGLE PROFESSIONAL
 // GET /api/professionals/:id
-// Public – single professional profile
+// Public - anyone can view
+// ─────────────────────────────────────────
 export const getProfessionalById = async (req, res) => {
   try {
-    const professionalId = parseNumber(req.params.id);
-
-    if (!professionalId) {
-      return res.status(400).json({ success: false, message: 'Invalid professional id' });
-    }
-
     const professional = await prisma.professional.findUnique({
-      where: { professionalId },
-      include: {
-        user: {
-          select: { id: true, name: true, email: true, phone: true }
-        }
-      }
+      where: { professionalId: parseInt(req.params.id) }
     });
 
     if (!professional) {
       return res.status(404).json({ success: false, message: 'Professional not found' });
     }
 
-    res.status(200).json({ success: true, professional });
+    res.status(200).json({ success: true, data: professional });
   } catch (error) {
-    console.error('getProfessionalById error:', error);
+    console.error('Get professional by ID error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };
+
+// ─────────────────────────────────────────
+// GET PROFESSIONALS BY SKILL
+// GET /api/professionals/skill/:skill
+// Public - anyone can filter by skill
+// ─────────────────────────────────────────
+export const getProfessionalsBySkill = async (req, res) => {
+  try {
+    const professionals = await prisma.professional.findMany({
+      where: {
+        skill: {
+          contains: req.params.skill  // partial match e.g. "plumb" matches "Plumbing"
+        }
+      },
+      orderBy: { rating: 'desc' }     // highest rated first
+    });
+
+    res.status(200).json({
+      success: true,
+      count: professionals.length,
+      data: professionals
+    });
+  } catch (error) {
+    console.error('Get professionals by skill error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// ─────────────────────────────────────────
+// ADD NEW PROFESSIONAL
+// POST /api/professionals
+// Admin only
+// ─────────────────────────────────────────
+export const createProfessional = async (req, res) => {
+  try {
+    const { userId, skill, experienceYears, hourlyRate, bio, isAvailable } = req.body;
+
+    // skill is required
+    if (!skill) {
+      return res.status(400).json({ success: false, message: 'Skill is required' });
+    }
+
+    const professional = await prisma.professional.create({
+      data: {
+        userId: userId ? parseInt(userId) : null,
+        skill,
+        experienceYears: experienceYears ? parseInt(experienceYears) : null,
+        hourlyRate: hourlyRate ? parseFloat(hourlyRate) : null,
+        bio: bio || null,
+        isAvailable: isAvailable !== undefined ? isAvailable : true
+      }
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Professional added successfully',
+      data: professional
+    });
+  } catch (error) {
+    console.error('Create professional error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// ─────────────────────────────────────────
+// DELETE PROFESSIONAL
+// DELETE /api/professionals/:id
+// Admin only
+// ─────────────────────────────────────────
+export const deleteProfessional = async (req, res) => {
+  try {
+    const professional = await prisma.professional.findUnique({
+      where: { professionalId: parseInt(req.params.id) }
+    });
+
+    if (!professional) {
+      return res.status(404).json({ success: false, message: 'Professional not found' });
+    }
+
+    await prisma.professional.delete({
+      where: { professionalId: parseInt(req.params.id) }
+    });
+
+    res.status(200).json({ success: true, message: 'Professional deleted successfully' });
+  } catch (error) {
+    console.error('Delete professional error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
 
 // ─────────────────────────────────────────────
 // PROFESSIONAL (self)
